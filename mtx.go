@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 type Numeric interface {
@@ -23,9 +25,16 @@ func main() {
 		{5, 2, 1},
 		{9, -7, -5},
 	}
+
+	sum := Add(m1, m2)
+	subtr := Subtr(m1, m2)
+	mult := Mult(m1, m2)
+
+	fmt.Println(Format(sum, "m"))
+	fmt.Println(Format(subtr, "m"))
+	fmt.Println(Format(mult, "m"))
 }
 
-// Creates matrix with dimensions rxc and generic type T
 func NewMatrix[T Numeric](r int, c int) [][]T {
 	m := make([][]T, r)
 
@@ -36,58 +45,84 @@ func NewMatrix[T Numeric](r int, c int) [][]T {
 	return m
 }
 
-// Adds two matrices with the same dimension.
-func Add[T Numeric](m1 [][]T, m2 [][]T, subtract ...bool) ([][]T, error) {
-	if Dimension(m1) != Dimension(m2) {
-		return nil, fmt.Errorf("matrix dimensions do not match: %v, %v", Dimension(m1), Dimension(m2))
+func Add[T Numeric](m1 [][]T, m2 [][]T, subtract ...bool) [][]T {
+	if f1, f2 := Format(m1, "ds"), Format(m2, "ds"); f1 != f2 {
+		panic(fmt.Errorf("dimension mismatch: m1=%v, m2=%v", f1, f2))
 	}
 
-	res := NewMatrix[T](len(m1), len(m1)) // matriz cuadrada??????
-
-	for i := 0; i < len(m1); i++ {
-		for j := 0; j < len(m1); j++ {
-			if subtract[0] == true {
-				res[i][j] = m1[i][j] - m2[i][j]
+	sum := NewMatrix[T](len(m1), len(m1[0]))
+	for i := range sum {
+		for j := range sum[0] {
+			if len(subtract) > 0 {
+				sum[i][j] = m1[i][j] - m2[i][j]
 				continue
 			}
 
-			res[i][j] = m1[i][j] + m2[i][j]
+			sum[i][j] = m1[i][j] + m2[i][j]
 		}
 	}
 
-	return res, nil
+	return sum
 }
 
-// Subtracts two matrices with the same dimension.
-func Subtr[T Numeric](m1 [][]T, m2 [][]T) ([][]T, error) {
+func Subtr[T Numeric](m1 [][]T, m2 [][]T) [][]T {
 	return Add(m1, m2, true)
 }
 
-// TODO: implementar multiplicación
-// Multiplies two matrices only if the number of rows of the first one is equal to
-// the number of columns of the second one.
-func mult(m1 [][]int, m2 [][]int, div ...bool) ([][]int, error) {
-	if len(m1[0]) != len(m2) {
-		return nil, fmt.Errorf("matrices are not multipliable: %v, %v", Dimension(m1), Dimension(m2))
+func Mult[T Numeric](m1 [][]T, m2 [][]T) [][]T {
+	if !multipliable(m1, m2) {
+		panic(fmt.Sprintf(
+			"matrices are not multipliable: m1=%v, m2=%v\n",
+			Format(m1, "ds"),
+			Format(m2, "ds"),
+		))
 	}
 
-	var res [][]int
-
-	return res, nil
-}
-
-func Divide(m1 [][]int, m2 [][]int) ([][]int, error) {
-	return mult(m1, m2, true)
-}
-
-// Returns a string representation of the NxM matrix dimension.
-func Dimension[T Numeric](m [][]T) string {
-	return fmt.Sprintf("%vx%v", len(m), len(m[0]))
-}
-
-// Shows a matrix view of the multidimensional slice.
-func DisplayMatrix[T Numeric](mtx [][]T) {
-	for _, row := range mtx {
-		fmt.Println(row)
+	m1M, err := strconv.Atoi(strings.Split(Format(m1, "ds"), "x")[0])
+	if err != nil {
+		panic(err)
 	}
+
+	m2N, err := strconv.Atoi(strings.Split(Format(m2, "ds"), "x")[1])
+	if err != nil {
+		panic(err)
+	}
+
+	result := NewMatrix[T](m1M, m2N)
+	for i := range result {
+		for j := range m1[0] {
+			for k := range m2[0] {
+				result[i][j] += m1[i][k] * m2[k][j]
+			}
+		}
+	}
+
+	return result
+}
+
+func Format[T Numeric](m [][]T, f string) string {
+	switch f {
+	case "m":
+		for _, row := range m {
+			fmt.Println(row)
+		}
+
+	case "d":
+		fmt.Printf("Matrix dimension: %vx%v\n", len(m), len(m[0]))
+
+	case "ds":
+		return fmt.Sprintf("%vx%v", len(m), len(m[0]))
+
+	default:
+		panic(fmt.Sprintf("'%v' is not a valid format option", f))
+	}
+
+	return ""
+}
+
+func multipliable[T Numeric](m1 [][]T, m2 [][]T) bool {
+	m1N := strings.Split(Format(m1, "ds"), "x")[1]
+	m2M := strings.Split(Format(m2, "ds"), "x")[0]
+
+	return m1N == m2M
 }
