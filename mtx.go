@@ -2,52 +2,38 @@ package main
 
 import (
 	"fmt"
-
-	"golang.org/x/exp/constraints"
 )
 
 type Numeric interface {
-	constraints.Integer | constraints.Float
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
+		~float32 | ~float64 |
+		~complex64 | ~complex128
 }
 
-// TODO: mirar las operaciones más comunes con matrices e implementarlas
-// suma, resta, multiplicación, división, transposición
 func main() {
-	size := 4
-	m1 := NewMatrix[int](size, size+1)
-	m2 := NewMatrix[int](size, size)
-
-	for i := 0; i < size; i++ {
-		for j := 0; j < size; j++ {
-			if i == j {
-				m1[i][j] = 1
-				m2[i][j] = 6
-			}
-		}
+	m1 := [][]int{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
 	}
 
-	DisplayMatrix(m1)
-	fmt.Println("-------------------")
-	DisplayMatrix(m2)
-	fmt.Println("-------------------")
-
-	m, err := mult(m1, m2)
-	if err != nil {
-		panic(err)
+	m2 := [][]int{
+		{1, -4, 9},
+		{5, 2, 1},
+		{9, -7, -5},
 	}
-
-	DisplayMatrix(m)
 }
 
-// Creates a zeroed matrix of Numeric type.
-func NewMatrix[T Numeric](rows int, cols int) [][]T {
-	matrix := make([][]T, 0)
+// Creates matrix with dimensions rxc and generic type T
+func NewMatrix[T Numeric](r int, c int) [][]T {
+	m := make([][]T, r)
 
-	for i := 0; i < rows; i++ {
-		matrix = append(matrix, make([]T, cols))
+	for i := range m {
+		m[i] = make([]T, c)
 	}
 
-	return matrix
+	return m
 }
 
 // Adds two matrices with the same dimension.
@@ -56,11 +42,11 @@ func Add[T Numeric](m1 [][]T, m2 [][]T, subtract ...bool) ([][]T, error) {
 		return nil, fmt.Errorf("matrix dimensions do not match: %v, %v", Dimension(m1), Dimension(m2))
 	}
 
-	res := NewMatrix[T](len(m1), len(m1))
+	res := NewMatrix[T](len(m1), len(m1)) // matriz cuadrada??????
 
 	for i := 0; i < len(m1); i++ {
 		for j := 0; j < len(m1); j++ {
-			if len(subtract) == 1 {
+			if subtract[0] == true {
 				res[i][j] = m1[i][j] - m2[i][j]
 				continue
 			}
