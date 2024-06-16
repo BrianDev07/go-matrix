@@ -85,17 +85,17 @@ func Mult[T Numeric](m1 [][]T, m2 [][]T) [][]T {
 		))
 	}
 
-	m1M, err := strconv.Atoi(strings.Split(Format(m1, "ds"), "x")[0])
+	m1Rows, err := strconv.Atoi(strings.Split(Format(m1, "ds"), "x")[0])
 	if err != nil {
 		panic(err)
 	}
 
-	m2N, err := strconv.Atoi(strings.Split(Format(m2, "ds"), "x")[1])
+	m2Cols, err := strconv.Atoi(strings.Split(Format(m2, "ds"), "x")[1])
 	if err != nil {
 		panic(err)
 	}
 
-	result := NewMatrix[T](m1M, m2N)
+	result := NewMatrix[T](m1Rows, m2Cols)
 	for i := range result {
 		for j := range m1[0] {
 			for k := range m2[0] {
@@ -150,8 +150,8 @@ func Format[T Numeric](m [][]T, f string) string {
 }
 
 func multipliable[T Numeric](m1 [][]T, m2 [][]T) bool {
-	m1N := strings.Split(Format(m1, "ds"), "x")[1]
-	m2M := strings.Split(Format(m2, "ds"), "x")[0]
+	m1Cols := strings.Split(Format(m1, "ds"), "x")[1]
+	m2Rows := strings.Split(Format(m2, "ds"), "x")[0]
 
-	return m1N == m2M
+	return m1Cols == m2Rows
 }
