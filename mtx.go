@@ -26,13 +26,20 @@ func main() {
 		{9, -7, -5},
 	}
 
+	m3 := [][]int{
+		{1, -4, 9},
+		{5, 2, 1},
+	}
+
 	sum := Add(m1, m2)
 	subtr := Subtr(m1, m2)
 	mult := Mult(m1, m2)
+	transp := Transpose(m3)
 
 	fmt.Println(Format(sum, "m"))
 	fmt.Println(Format(subtr, "m"))
 	fmt.Println(Format(mult, "m"))
+	fmt.Println(Format(transp, "m"))
 }
 
 func NewMatrix[T Numeric](r int, c int) [][]T {
@@ -98,6 +105,28 @@ func Mult[T Numeric](m1 [][]T, m2 [][]T) [][]T {
 	}
 
 	return result
+}
+
+func Transpose[T Numeric](m [][]T) [][]T {
+	rows, err := strconv.Atoi(strings.Split(Format(m, "ds"), "x")[0])
+	if err != nil {
+		panic(err)
+	}
+
+	cols, err := strconv.Atoi(strings.Split(Format(m, "ds"), "x")[1])
+	if err != nil {
+		panic(err)
+	}
+
+	transposed := NewMatrix[T](cols, rows)
+
+	for i := range transposed {
+		for j := range transposed[0] {
+			transposed[i][j] = m[j][i]
+		}
+	}
+
+	return transposed
 }
 
 func Format[T Numeric](m [][]T, f string) string {
